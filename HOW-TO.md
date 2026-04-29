@@ -14,12 +14,12 @@ OS // SOLO consolidates your daily operating workflow into a single control plan
 - **Inbox** -- Unified triage for email, Stripe events, GitHub notifications, and webhooks
 - **Infrastructure** -- Live view of your VPS fleet, containers, health checks, and Caddy routes via MCP
 - **Finance** -- MRR tracking from Stripe, expense management, AI spend monitoring, revenue per product
-- **Projects** -- Project registry with notes, knowledge bases (agent context), and activity timelines
+- **Projects** -- Project registry with overview, activity timelines, and placeholder tabs for notes and knowledge bases (v2)
 - **Vault** -- Encrypted credential storage with agent access controls and rotation reminders
 - **Analytics** -- Per-agent performance dashboards: runs, costs, approval rates, estimated time saved
 - **Command Bar** -- Cmd+K natural language command palette for navigation, quick actions, and data queries
 - **Workflow Canvas** -- Visual drag-and-drop editor for agent execution flows (trigger / agent / action)
-- **Notifications** -- Push alerts via browser, Slack, Discord, and email with Focus Mode suppression
+- **Notifications** -- Push alerts via browser, Slack, Discord, and email
 - **Settings** -- Profile, AI config, integrations, triage rules, response templates, system admin
 - **Audit Log** -- Immutable record of every action taken by you or your agents
 
@@ -164,7 +164,7 @@ Go to **Projects** in the sidebar. Click "New Project" and fill in:
 - Repo URL (optional -- links to your GitHub repo)
 - Status (Active)
 
-Once created, open the project and fill in the **Knowledge Base** tab. This is what your AI agents read before working on the project: tech stack, architecture, conventions, folder structure, and constraints. The more context you provide here, the better your agents perform.
+Once created, you can view the project overview and activity timeline. The **Notes** and **Knowledge Base** tabs are stubbed out for a future release -- when wired, the Knowledge Base will let you feed project context (tech stack, architecture, conventions) directly to your AI agents.
 
 ### Register your servers
 
@@ -238,7 +238,7 @@ The intended daily flow takes about 15 minutes:
 3. **Scan the Inbox.** Review AI-triaged items. Send responses. Assign complex items to agents.
 4. **Check Infrastructure.** Glance at server health. Investigate any incidents.
 5. **Review Finance.** Check MRR trends and AI spend. Note anything unusual.
-6. **Toggle Focus Mode** and get back to deep work. Agents handle the rest.
+6. Get back to deep work. Agents handle the rest. (Focus Mode toggle is stubbed in the topbar for a future release.)
 
 ---
 
@@ -327,7 +327,7 @@ Supported channels:
 - **Discord** -- embedded messages via webhook
 - **Email** -- alerts via your configured SMTP
 
-Each event type (agent failure, server offline, budget warning, new urgent ticket, etc.) can be routed to specific channels with severity filtering. **Focus Mode** suppresses non-critical notifications when active.
+Each event type (agent failure, server offline, budget warning, new urgent ticket, etc.) can be routed to specific channels with severity filtering.
 
 The in-app notification bell in the top bar shows recent notifications regardless of push channel configuration.
 

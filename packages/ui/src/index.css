@@ -30,6 +30,27 @@
   --color-danger: #da1e28;
   --color-info: #0043ce;
 
+  /* shadcn/ui semantic colors mapped to Carbon */
+  --color-background: #ffffff;
+  --color-foreground: #161616;
+  --color-card: #ffffff;
+  --color-card-foreground: #161616;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #161616;
+  --color-primary: #0f62fe;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #e0e0e0;
+  --color-secondary-foreground: #161616;
+  --color-muted: #f4f4f4;
+  --color-muted-foreground: #6f6f6f;
+  --color-accent: #e0e0e0;
+  --color-accent-foreground: #161616;
+  --color-destructive: #da1e28;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e0e0e0;
+  --color-input: #c6c6c6;
+  --color-ring: #0f62fe;
+
   /* Typography */
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;

@@ -70,22 +70,21 @@ export function Projects() {
             Loading projects...
           </div>
         ) : filteredProjects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-gray-60">
-            <p className="text-center">
-              {showArchived && projects.length === 0
-                ? 'No projects yet — click Add Project to get started'
-                : activeTab === 'all'
-                ? 'No projects match the current filter'
-                : `No ${activeTab} projects`}
-            </p>
-            {!showArchived && activeTab === 'all' && projects.length === 0 && (
-              <Button
-                variant="link"
-                onClick={() => setDrawerOpen(true)}
-                className="mt-2"
-              >
-                Add Project
-              </Button>
+          <div className="flex flex-col items-center justify-center py-16 text-gray-60">
+            {projects.length === 0 ? (
+              <>
+                <p className="text-lg text-gray-100 mb-2">No projects yet</p>
+                <p className="text-sm mb-4">Create a project to start tracking your work, notes, and agent context.</p>
+                <Button onClick={() => setDrawerOpen(true)}>
+                  Add Project
+                </Button>
+              </>
+            ) : (
+              <p className="text-center">
+                {activeTab === 'all'
+                  ? 'No projects match the current filter'
+                  : `No ${activeTab} projects`}
+              </p>
             )}
           </div>
         ) : (

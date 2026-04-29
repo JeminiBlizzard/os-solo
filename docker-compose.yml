@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ossolo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ossolo_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ossolo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ossolo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    container_name: os-solo
+    build: .
+    ports:
+      - "3200:3200"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-ossolo}:${POSTGRES_PASSWORD:-ossolo_dev_password}@postgres:5432/${POSTGRES_DB:-ossolo}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - webnet
+      - internal
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  webnet:
+    external: true
+  internal:
+    driver: bridge

@@ -1,0 +1,9 @@
+{
+  "name": "@os-solo/integrations",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "[ -d src ] && tsc --noEmit || echo 'No src directory yet'"
+  }
+}

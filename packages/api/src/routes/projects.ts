@@ -409,3 +409,268 @@ router.delete('/:id', async (req: Request, res: Response) => {
 });
 
 export default router;
+
+// ── Project Notes ──────────────────────────────────────────────
+
+/**
+ * GET /api/v1/projects/:id/notes
+ * List notes for a project.
+ */
+router.get('/:id/notes', async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json(fail('UNAUTHORIZED', 'Authentication required'));
+    return;
+  }
+
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const projectId = parseInt(idParam ?? '', 10);
+  if (isNaN(projectId)) {
+    res.status(400).json(fail('INVALID_REQUEST', 'Invalid project ID'));
+    return;
+  }
+
+  // Verify ownership
+  const [project] = await db
+    .select({ id: schema.projects.id })
+    .from(schema.projects)
+    .where(and(eq(schema.projects.id, projectId), eq(schema.projects.userId, req.user.id)))
+    .limit(1);
+
+  if (!project) {
+    res.status(404).json(fail('NOT_FOUND', 'Project not found'));
+    return;
+  }
+
+  const notes = await db
+    .select()
+    .from(schema.projectNotes)
+    .where(eq(schema.projectNotes.projectId, projectId))
+    .orderBy(desc(schema.projectNotes.updatedAt));
+
+  res.json(ok({ notes }));
+});
+
+/**
+ * POST /api/v1/projects/:id/notes
+ * Create a note for a project.
+ */
+router.post('/:id/notes', async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json(fail('UNAUTHORIZED', 'Authentication required'));
+    return;
+  }
+
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const projectId = parseInt(idParam ?? '', 10);
+  if (isNaN(projectId)) {
+    res.status(400).json(fail('INVALID_REQUEST', 'Invalid project ID'));
+    return;
+  }
+
+  // Verify ownership
+  const [project] = await db
+    .select({ id: schema.projects.id })
+    .from(schema.projects)
+    .where(and(eq(schema.projects.id, projectId), eq(schema.projects.userId, req.user.id)))
+    .limit(1);
+
+  if (!project) {
+    res.status(404).json(fail('NOT_FOUND', 'Project not found'));
+    return;
+  }
+
+  const { title, body, tags } = req.body;
+
+  const [note] = await db
+    .insert(schema.projectNotes)
+    .values({
+      projectId,
+      userId: req.user.id,
+      title: title || 'Untitled',
+      body: body || '',
+      tags: tags || [],
+    })
+    .returning();
+
+  // Log activity
+  await db.insert(schema.projectActivity).values({
+    projectId,
+    type: 'note_added',
+    description: `Note "${title || 'Untitled'}" created`,
+    sourceType: 'user',
+    sourceId: req.user.id,
+    metadata: {},
+  });
+
+  res.status(201).json(ok({ note }));
+});
+
+/**
+ * PATCH /api/v1/projects/:id/notes/:noteId
+ * Update a note.
+ */
+router.patch('/:id/notes/:noteId', async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json(fail('UNAUTHORIZED', 'Authentication required'));
+    return;
+  }
+
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const projectId = parseInt(idParam ?? '', 10);
+  const noteIdParam = Array.isArray(req.params.noteId) ? req.params.noteId[0] : req.params.noteId;
+  const noteId = parseInt(noteIdParam ?? '', 10);
+
+  if (isNaN(projectId) || isNaN(noteId)) {
+    res.status(400).json(fail('INVALID_REQUEST', 'Invalid project or note ID'));
+    return;
+  }
+
+  // Verify ownership of note via project
+  const [existing] = await db
+    .select({ id: schema.projectNotes.id })
+    .from(schema.projectNotes)
+    .innerJoin(schema.projects, eq(schema.projects.id, schema.projectNotes.projectId))
+    .where(
+      and(
+        eq(schema.projectNotes.id, noteId),
+        eq(schema.projectNotes.projectId, projectId),
+        eq(schema.projects.userId, req.user.id)
+      )
+    )
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json(fail('NOT_FOUND', 'Note not found'));
+    return;
+  }
+
+  const { title, body, tags } = req.body;
+  const updates: any = { updatedAt: new Date() };
+  if (title !== undefined) updates.title = title;
+  if (body !== undefined) updates.body = body;
+  if (tags !== undefined) updates.tags = tags;
+
+  const [note] = await db
+    .update(schema.projectNotes)
+    .set(updates)
+    .where(eq(schema.projectNotes.id, noteId))
+    .returning();
+
+  res.json(ok({ note }));
+});
+
+/**
+ * DELETE /api/v1/projects/:id/notes/:noteId
+ * Delete a note.
+ */
+router.delete('/:id/notes/:noteId', async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json(fail('UNAUTHORIZED', 'Authentication required'));
+    return;
+  }
+
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const projectId = parseInt(idParam ?? '', 10);
+  const noteIdParam = Array.isArray(req.params.noteId) ? req.params.noteId[0] : req.params.noteId;
+  const noteId = parseInt(noteIdParam ?? '', 10);
+
+  if (isNaN(projectId) || isNaN(noteId)) {
+    res.status(400).json(fail('INVALID_REQUEST', 'Invalid project or note ID'));
+    return;
+  }
+
+  // Verify ownership
+  const [existing] = await db
+    .select({ id: schema.projectNotes.id, title: schema.projectNotes.title })
+    .from(schema.projectNotes)
+    .innerJoin(schema.projects, eq(schema.projects.id, schema.projectNotes.projectId))
+    .where(
+      and(
+        eq(schema.projectNotes.id, noteId),
+        eq(schema.projectNotes.projectId, projectId),
+        eq(schema.projects.userId, req.user.id)
+      )
+    )
+    .limit(1);
+
+  if (!existing) {
+    res.status(404).json(fail('NOT_FOUND', 'Note not found'));
+    return;
+  }
+
+  await db.delete(schema.projectNotes).where(eq(schema.projectNotes.id, noteId));
+
+  res.json(ok({ deleted: true }));
+});
+
+// ── Project Knowledge (dedicated endpoint) ─────────────────────
+
+/**
+ * PUT /api/v1/projects/:id/knowledge
+ * Create or update the knowledge base for a project.
+ */
+router.put('/:id/knowledge', async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json(fail('UNAUTHORIZED', 'Authentication required'));
+    return;
+  }
+
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const projectId = parseInt(idParam ?? '', 10);
+  if (isNaN(projectId)) {
+    res.status(400).json(fail('INVALID_REQUEST', 'Invalid project ID'));
+    return;
+  }
+
+  // Verify ownership
+  const [project] = await db
+    .select({ id: schema.projects.id })
+    .from(schema.projects)
+    .where(and(eq(schema.projects.id, projectId), eq(schema.projects.userId, req.user.id)))
+    .limit(1);
+
+  if (!project) {
+    res.status(404).json(fail('NOT_FOUND', 'Project not found'));
+    return;
+  }
+
+  const { version, techStack, architecture, conventions, folderStructure, authApproach, errorHandling, hardConstraints, endStateVision, customFields } = req.body;
+
+  const values = {
+    projectId,
+    version: version ?? null,
+    techStack: techStack ?? null,
+    architecture: architecture ?? null,
+    conventions: conventions ?? null,
+    folderStructure: folderStructure ?? null,
+    authApproach: authApproach ?? null,
+    errorHandling: errorHandling ?? null,
+    hardConstraints: hardConstraints ?? null,
+    endStateVision: endStateVision ?? null,
+    customFields: customFields ?? {},
+    updatedAt: new Date(),
+  };
+
+  // Upsert
+  const [existing] = await db
+    .select({ id: schema.projectKnowledge.id })
+    .from(schema.projectKnowledge)
+    .where(eq(schema.projectKnowledge.projectId, projectId))
+    .limit(1);
+
+  let knowledge;
+  if (existing) {
+    [knowledge] = await db
+      .update(schema.projectKnowledge)
+      .set(values)
+      .where(eq(schema.projectKnowledge.projectId, projectId))
+      .returning();
+  } else {
+    [knowledge] = await db
+      .insert(schema.projectKnowledge)
+      .values(values)
+      .returning();
+  }
+
+  res.json(ok({ knowledge }));
+});

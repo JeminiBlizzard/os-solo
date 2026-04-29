@@ -149,3 +149,78 @@ export function useDeleteProject() {
     },
   });
 }
+
+// ── Notes hooks ──────────────────────────────────────────────
+
+export interface ProjectNote {
+  id: number;
+  projectId: number;
+  userId: number;
+  title: string | null;
+  body: string | null;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function useProjectNotes(projectId: number | null) {
+  return useQuery<{ notes: ProjectNote[] }>({
+    queryKey: ['projects', 'notes', projectId],
+    queryFn: async () => {
+      return apiClient.get<{ notes: ProjectNote[] }>(`/api/v1/projects/${projectId}/notes`);
+    },
+    enabled: projectId !== null,
+  });
+}
+
+export function useCreateNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, title, body }: { projectId: number; title: string; body: string }) => {
+      return apiClient.post<{ note: ProjectNote }>(`/api/v1/projects/${projectId}/notes`, { title, body });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', 'notes', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects', 'detail', variables.projectId] });
+    },
+  });
+}
+
+export function useUpdateNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, noteId, title, body }: { projectId: number; noteId: number; title?: string; body?: string }) => {
+      return apiClient.patch<{ note: ProjectNote }>(`/api/v1/projects/${projectId}/notes/${noteId}`, { title, body });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', 'notes', variables.projectId] });
+    },
+  });
+}
+
+export function useDeleteNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, noteId }: { projectId: number; noteId: number }) => {
+      return apiClient.delete<{ deleted: boolean }>(`/api/v1/projects/${projectId}/notes/${noteId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', 'notes', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects', 'detail', variables.projectId] });
+    },
+  });
+}
+
+// ── Knowledge hook ───────────────────────────────────────────
+
+export function useSaveKnowledge() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, ...fields }: { projectId: number } & Partial<ProjectKnowledge>) => {
+      return apiClient.put<{ knowledge: ProjectKnowledge }>(`/api/v1/projects/${projectId}/knowledge`, fields);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', 'detail', variables.projectId] });
+    },
+  });
+}

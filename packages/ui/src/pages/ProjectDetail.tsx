@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ProjectOverview } from '@/components/projects/ProjectOverview';
+import { NotesTab } from '@/components/projects/NotesTab';
+import { KnowledgeBaseTab } from '@/components/projects/KnowledgeBaseTab';
 import { ActivityTimeline } from '@/components/projects/ActivityTimeline';
 import { useProject } from '@/hooks/useProjects';
 
@@ -66,15 +67,11 @@ export function ProjectDetail() {
           </TabsContent>
 
           <TabsContent value="notes">
-            <div className="py-8 text-gray-60 text-center">
-              Notes tab - Coming in task 115.4
-            </div>
+            <NotesTab projectId={project.id} />
           </TabsContent>
 
           <TabsContent value="knowledge">
-            <div className="py-8 text-gray-60 text-center">
-              Knowledge Base - Coming in task 115.5
-            </div>
+            <KnowledgeBaseTab projectId={project.id} knowledge={knowledge} />
           </TabsContent>
 
           <TabsContent value="activity">

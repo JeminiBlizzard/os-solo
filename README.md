@@ -16,7 +16,7 @@ A one-person company should be able to open one app in the morning, review what 
 - **Inbox & Triage** -- Unified inbox for email, Stripe, GitHub, and webhooks with AI triage
 - **Infrastructure** -- Live fleet view of VPS servers and containers via MCP
 - **Finance & MRR** -- Stripe revenue tracking, expense management, AI spend monitoring
-- **Projects** -- Project registry with overview and activity timelines (notes and knowledge base tabs are v2)
+- **Projects & Notes** -- Project registry with notes, knowledge bases that feed agent context, and activity timelines
 - **Vault** -- AES-256-GCM encrypted credential storage with agent access controls
 - **Workflow Canvas** -- Visual editor for agent execution flows
 - **Command Bar** -- Cmd+K natural language navigation, actions, and queries

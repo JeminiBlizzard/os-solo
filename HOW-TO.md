@@ -14,7 +14,7 @@ OS // SOLO consolidates your daily operating workflow into a single control plan
 - **Inbox** -- Unified triage for email, Stripe events, GitHub notifications, and webhooks
 - **Infrastructure** -- Live view of your VPS fleet, containers, health checks, and Caddy routes via MCP
 - **Finance** -- MRR tracking from Stripe, expense management, AI spend monitoring, revenue per product
-- **Projects** -- Project registry with overview, activity timelines, and placeholder tabs for notes and knowledge bases (v2)
+- **Projects** -- Project registry with notes, knowledge bases (agent context), and activity timelines
 - **Vault** -- Encrypted credential storage with agent access controls and rotation reminders
 - **Analytics** -- Per-agent performance dashboards: runs, costs, approval rates, estimated time saved
 - **Command Bar** -- Cmd+K natural language command palette for navigation, quick actions, and data queries
@@ -164,7 +164,9 @@ Go to **Projects** in the sidebar. Click "New Project" and fill in:
 - Repo URL (optional -- links to your GitHub repo)
 - Status (Active)
 
-Once created, you can view the project overview and activity timeline. The **Notes** and **Knowledge Base** tabs are stubbed out for a future release -- when wired, the Knowledge Base will let you feed project context (tech stack, architecture, conventions) directly to your AI agents.
+Once created, open the project and fill in the **Knowledge Base** tab. This is what your AI agents read before working on the project: tech stack, architecture, conventions, folder structure, and constraints. The more context you provide here, the better your agents perform.
+
+Use the **Notes** tab as an operational scratchpad -- decisions, reminders, anything you want attached to the project. Notes support markdown.
 
 ### Register your servers
 

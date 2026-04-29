@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSettings } from '@/hooks/useSettings';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,18 @@ const THEMES = [
 ];
 
 export function Profile() {
-  const { settings, updateSettings, changePassword, isChangingPassword } = useSettings();
+  const { settings, updateSettings, isUpdating, changePassword, isChangingPassword } = useSettings();
+
+  // Local form state
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [timezone, setTimezone] = useState('');
+  const [theme, setTheme] = useState('');
+
+  // Track dirty state per section
+  const [profileDirty, setProfileDirty] = useState(false);
+  const [prefsDirty, setPrefsDirty] = useState(false);
+
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     current_password: '',
@@ -50,6 +61,18 @@ export function Profile() {
     confirm_password: '',
   });
   const [authWarningModalOpen, setAuthWarningModalOpen] = useState(false);
+
+  // Sync local state from server data
+  useEffect(() => {
+    if (settings) {
+      setDisplayName(settings.profile.display_name);
+      setEmail(settings.profile.email);
+      setTimezone(settings.preferences.timezone);
+      setTheme(settings.preferences.theme);
+      setProfileDirty(false);
+      setPrefsDirty(false);
+    }
+  }, [settings]);
 
   if (!settings) {
     return (
@@ -59,24 +82,29 @@ export function Profile() {
     );
   }
 
-  const handleProfileUpdate = (field: string, value: string) => {
-    updateSettings({ profile: { [field]: value } });
+  const handleSaveProfile = () => {
+    updateSettings(
+      { profile: { display_name: displayName, email } },
+      {
+        onSuccess: () => setProfileDirty(false),
+      }
+    );
   };
 
-  const handlePreferenceUpdate = (field: string, value: string) => {
-    updateSettings({ preferences: { [field]: value } });
+  const handleSavePreferences = () => {
+    updateSettings(
+      { preferences: { timezone, theme } },
+      {
+        onSuccess: () => setPrefsDirty(false),
+      }
+    );
   };
 
   const handleAuthEnabledToggle = (enabled: boolean) => {
-    // Check if user has a password when toggling on
     if (enabled && !settings.profile.auth_enabled) {
       setAuthWarningModalOpen(true);
       return;
     }
-
-    // Note: auth_enabled is in the users table, not user_settings
-    // For now, we'll just show a warning. The actual toggle would need
-    // a separate endpoint or different handling
     toast.error('Toggling auth requires password setup first');
   };
 
@@ -85,12 +113,10 @@ export function Profile() {
       toast.error('New passwords do not match');
       return;
     }
-
     if (passwordForm.new_password.length < 8) {
       toast.error('Password must be at least 8 characters');
       return;
     }
-
     changePassword(
       {
         current_password: passwordForm.current_password,
@@ -107,29 +133,36 @@ export function Profile() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      {/* Profile */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Profile Information</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-100">Profile Information</h2>
+          <Button
+            onClick={handleSaveProfile}
+            disabled={!profileDirty || isUpdating}
+            size="sm"
+          >
+            {isUpdating ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
         <div className="space-y-4">
           <div>
             <Label htmlFor="display_name">Display Name</Label>
             <Input
               id="display_name"
-              value={settings.profile.display_name}
-              onChange={(e) => handleProfileUpdate('display_name', e.target.value)}
-              onBlur={(e) => handleProfileUpdate('display_name', e.target.value)}
+              value={displayName}
+              onChange={(e) => { setDisplayName(e.target.value); setProfileDirty(true); }}
               placeholder="Your name"
               className="mt-1"
             />
           </div>
-
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              value={settings.profile.email}
-              onChange={(e) => handleProfileUpdate('email', e.target.value)}
-              onBlur={(e) => handleProfileUpdate('email', e.target.value)}
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setProfileDirty(true); }}
               placeholder="your@email.com"
               className="mt-1"
             />
@@ -137,14 +170,24 @@ export function Profile() {
         </div>
       </Card>
 
+      {/* Preferences */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Preferences</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-100">Preferences</h2>
+          <Button
+            onClick={handleSavePreferences}
+            disabled={!prefsDirty || isUpdating}
+            size="sm"
+          >
+            {isUpdating ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
         <div className="space-y-4">
           <div>
             <Label htmlFor="timezone">Timezone</Label>
             <Select
-              value={settings.preferences.timezone}
-              onValueChange={(value) => handlePreferenceUpdate('timezone', value)}
+              value={timezone}
+              onValueChange={(v) => { setTimezone(v); setPrefsDirty(true); }}
             >
               <SelectTrigger id="timezone" className="mt-1">
                 <SelectValue />
@@ -158,20 +201,19 @@ export function Profile() {
               </SelectContent>
             </Select>
           </div>
-
           <div>
             <Label htmlFor="theme">Theme</Label>
             <Select
-              value={settings.preferences.theme}
-              onValueChange={(value) => handlePreferenceUpdate('theme', value)}
+              value={theme}
+              onValueChange={(v) => { setTheme(v); setPrefsDirty(true); }}
             >
               <SelectTrigger id="theme" className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {THEMES.map((theme) => (
-                  <SelectItem key={theme.value} value={theme.value}>
-                    {theme.label}
+                {THEMES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -183,6 +225,7 @@ export function Profile() {
         </div>
       </Card>
 
+      {/* Security */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Security</h2>
         <div className="space-y-4">
@@ -199,7 +242,6 @@ export function Profile() {
               onCheckedChange={handleAuthEnabledToggle}
             />
           </div>
-
           <div>
             <Button onClick={() => setPasswordModalOpen(true)}>
               Change Password
@@ -208,7 +250,7 @@ export function Profile() {
         </div>
       </Card>
 
-      {/* Password Change Modal */}
+      {/* Password Modal */}
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -224,9 +266,7 @@ export function Profile() {
                 id="current_password"
                 type="password"
                 value={passwordForm.current_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, current_password: e.target.value })
-                }
+                onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -236,14 +276,10 @@ export function Profile() {
                 id="new_password"
                 type="password"
                 value={passwordForm.new_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, new_password: e.target.value })
-                }
+                onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
                 className="mt-1"
               />
-              <p className="text-xs text-gray-60 mt-1">
-                Must be at least 8 characters
-              </p>
+              <p className="text-xs text-gray-60 mt-1">Must be at least 8 characters</p>
             </div>
             <div>
               <Label htmlFor="confirm_password">Confirm New Password</Label>
@@ -251,17 +287,13 @@ export function Profile() {
                 id="confirm_password"
                 type="password"
                 value={passwordForm.confirm_password}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, confirm_password: e.target.value })
-                }
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
                 className="mt-1"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>Cancel</Button>
             <Button onClick={handlePasswordChange} disabled={isChangingPassword}>
               {isChangingPassword ? 'Updating...' : 'Update Password'}
             </Button>
@@ -279,15 +311,8 @@ export function Profile() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAuthWarningModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                setAuthWarningModalOpen(false);
-                setPasswordModalOpen(true);
-              }}
-            >
+            <Button variant="outline" onClick={() => setAuthWarningModalOpen(false)}>Cancel</Button>
+            <Button onClick={() => { setAuthWarningModalOpen(false); setPasswordModalOpen(true); }}>
               Set Password
             </Button>
           </DialogFooter>

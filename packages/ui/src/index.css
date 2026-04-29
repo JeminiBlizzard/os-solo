@@ -1,4 +1,36 @@
 @import "tailwindcss";
 @import "@fontsource-variable/ibm-plex-sans/index.css";
 @import "@fontsource/ibm-plex-mono/index.css";
-@import "./styles/theme.css";
+
+@theme {
+  /* Carbon gray scale */
+  --color-gray-10: #f4f4f4;
+  --color-gray-20: #e0e0e0;
+  --color-gray-30: #c6c6c6;
+  --color-gray-40: #a8a8a8;
+  --color-gray-50: #8d8d8d;
+  --color-gray-60: #6f6f6f;
+  --color-gray-70: #525252;
+  --color-gray-80: #393939;
+  --color-gray-90: #262626;
+  --color-gray-100: #161616;
+
+  /* Brand - Carbon blue */
+  --color-brand: #0f62fe;
+  --color-brand-blue: #0f62fe;
+
+  /* AI purple - RESERVED FOR AI-RELATED UI ONLY */
+  --color-ai: #8a3ffc;
+  --color-ai-subtle: #d4bbff;
+  --color-ai-strong: #6929c4;
+
+  /* Semantic */
+  --color-success: #24a148;
+  --color-warning: #f1c21b;
+  --color-danger: #da1e28;
+  --color-info: #0043ce;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}

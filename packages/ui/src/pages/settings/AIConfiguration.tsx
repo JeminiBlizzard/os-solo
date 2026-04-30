@@ -133,6 +133,9 @@ export function AIConfiguration() {
 
       <Card className="p-6">
         <AIProviders />
+        <p className="text-xs text-gray-60 mt-4 pt-3 border-t border-gray-20">
+          API keys are encrypted and stored in the <a href="/vault" className="text-brand underline">Vault</a>. You can also set your initial API key via the <code className="bg-gray-10 px-1 py-0.5 rounded font-mono text-xs">ANTHROPIC_API_KEY</code> environment variable.
+        </p>
       </Card>
     </div>
   );

@@ -13,7 +13,7 @@ import { ok, fail } from '../lib/response.js';
 const router: Router = Router();
 
 // Valid category values
-const VALID_CATEGORIES = ['infrastructure', 'software', 'marketing', 'other'] as const;
+const VALID_CATEGORIES = ['infrastructure', 'ai_services', 'dev_tools', 'design', 'marketing', 'saas', 'contractor', 'software', 'other'] as const;
 type Category = typeof VALID_CATEGORIES[number];
 
 // Valid interval/recurrence values
